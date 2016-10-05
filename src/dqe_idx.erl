@@ -19,7 +19,7 @@
 
 -type bucket() :: binary().
 -type collection() :: binary().
--type metric() :: binary().
+-type metric() :: [binary()].
 -type key() :: binary().
 -type glob_metric() :: [binary() | '*'].
 -type namespace() :: binary().
@@ -29,7 +29,7 @@
 -type tags() :: [{Namespace::namespace(), TagName::tag_name(),
                   Value::tag_value()}].
 
--type opt_metric() :: [metric()] | undefined.
+-type opt_metric() :: metric() | undefined.
 
 -type where() :: {'=',  tag(), tag_value()} |
                  {'and', where(), where()} |
@@ -65,7 +65,7 @@
     {error, Error::term()}.
 
 -callback metrics(Collection::collection()) ->
-    {ok, [metric()]} |
+    {ok, metric()} |
     {error, Error::term()}.
 
 -callback namespaces(Collection::collection()) ->
@@ -96,11 +96,11 @@
     {error, Error::term()}.
 
 -callback expand(Bucket::bucket(), [glob_metric()]) ->
-    {ok, {bucket(), [metric()]}} |
+    {ok, {bucket(), metric()}} |
     {error, Error::term()}.
 
--callback metric_variants(Collection::collection(), Prefix::[metric()]) ->
-    {ok, [Metric::metric()]} |
+-callback metric_variants(Collection::collection(), Prefix::metric()) ->
+    {ok, metric()} |
     {error, Error::term()}.
 
 -callback add(Collection::collection(),
@@ -219,7 +219,7 @@ collections() ->
 %%--------------------------------------------------------------------
 
 -spec metrics(Collection::collection()) ->
-                     {ok, [metric()]} |
+                     {ok, metric()} |
                      {error, Error::term()}.
 metrics(Collection) ->
     Mod = idx_module(),
@@ -315,7 +315,7 @@ values(Collection, Metric, Namespace, Tag) ->
 %%--------------------------------------------------------------------
 
 -spec expand(bucket(), [glob_metric()]) ->
-                    {ok, {bucket(), [metric()]}} |
+                    {ok, {bucket(), metric()}} |
                     {error, Error::term()}.
 expand(B, Gs) ->
     Mod = idx_module(),
@@ -332,8 +332,8 @@ expand(B, Gs) ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec metric_variants(Collection::collection(), Prefix::[metric()]) ->
-                    {ok, [Metric::metric()]} |
+-spec metric_variants(Collection::collection(), Prefix::metric()) ->
+                    {ok, Metric::metric()} |
                     {error, Error::term()}.
 metric_variants(Collection, Prefix) ->
     Mod = idx_module(),
