@@ -20,7 +20,7 @@
 -type bucket() :: binary().
 -type collection() :: binary().
 -type metric() :: [binary()].
--type key() :: binary().
+-type key() :: [binary()].
 -type glob_metric() :: [binary() | '*'].
 -type namespace() :: binary().
 -type tag_name() :: binary().
