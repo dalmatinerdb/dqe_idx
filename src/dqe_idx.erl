@@ -68,7 +68,7 @@
     {ok, metric()} |
     {error, Error::term()}.
 
--callback metrics(Collection::collection(), Prefix::metric(),
+-callback metrics(Collection::collection(), Prefix::[metric()],
                   Depth::pos_integer()) ->
     {ok, [metric()]} |
     {error, Error::term()}.
@@ -232,15 +232,12 @@ metrics(Collection) ->
 %% by the given probe `Prefix', which can also be empty.
 %%
 %% For example:
-%% metrics(<<"collection">>, <<>>, 1) -> [<<"base">>].
-%% metrics(<<"collection">>, <<"base">>, 1) -> [<<"cpu">>].
-%% metrics(<<"collection">>, <<>>, 2) -> [[<<"base">>.<<"cpu">>]].
-%%
-%% Actual results are binary-encoded in `dproto' encoding.
+%% metrics(<<"collection">>, [], 1) -> [<<"base">>].
+%% metrics(<<"collection">>, [<<"base">>], 1) -> [<<"cpu">>].
+%% metrics(<<"collection">>, [], 2) -> [[<<"base">>.<<"cpu">>]].
 %% @end
 %%--------------------------------------------------------------------
--spec metrics(Collection::collection(),
-              Prefix::metric(),
+-spec metrics(Collection::collection(), Prefix::[metric()],
               Depth::pos_integer()) ->
                     {ok, [Metric::metric()]} |
                     {error, Error::term()}.
