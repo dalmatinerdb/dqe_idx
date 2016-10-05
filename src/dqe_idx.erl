@@ -68,9 +68,9 @@
     {ok, metric()} |
     {error, Error::term()}.
 
--callback metrics(Collection::collection(), Prefix::[metric()],
+-callback metrics(Collection::collection(), Prefix::metric(),
                   Depth::pos_integer()) ->
-    {ok, [metric()]} |
+    {ok, metric()} |
     {error, Error::term()}.
 
 -callback namespaces(Collection::collection()) ->
@@ -234,12 +234,12 @@ metrics(Collection) ->
 %% For example:
 %% metrics(<<"collection">>, [], 1) -> [<<"base">>].
 %% metrics(<<"collection">>, [<<"base">>], 1) -> [<<"cpu">>].
-%% metrics(<<"collection">>, [], 2) -> [[<<"base">>.<<"cpu">>]].
+%% metrics(<<"collection">>, [], 2) -> [[<<"base">>,<<"cpu">>]].
 %% @end
 %%--------------------------------------------------------------------
--spec metrics(Collection::collection(), Prefix::[metric()],
+-spec metrics(Collection::collection(), Prefix::metric(),
               Depth::pos_integer()) ->
-                    {ok, [Metric::metric()]} |
+                    {ok, Metric::metric()} |
                     {error, Error::term()}.
 metrics(Collection, Prefix, Depth) ->
     Mod = idx_module(),
