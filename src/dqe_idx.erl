@@ -65,12 +65,12 @@
     {error, Error::term()}.
 
 -callback metrics(Collection::collection()) ->
-    {ok, metric()} |
+    {ok, [metric()]} |
     {error, Error::term()}.
 
 -callback metrics(Collection::collection(), Prefix::metric(),
                   Depth::pos_integer()) ->
-    {ok, metric()} |
+    {ok, [metric()]} |
     {error, Error::term()}.
 
 -callback namespaces(Collection::collection()) ->
@@ -101,7 +101,7 @@
     {error, Error::term()}.
 
 -callback expand(Bucket::bucket(), [glob_metric()]) ->
-    {ok, {bucket(), metric()}} |
+    {ok, {bucket(), [metric()]}} |
     {error, Error::term()}.
 
 -callback add(Collection::collection(),
@@ -220,7 +220,7 @@ collections() ->
 %%--------------------------------------------------------------------
 
 -spec metrics(Collection::collection()) ->
-                     {ok, metric()} |
+                     {ok, [metric()]} |
                      {error, Error::term()}.
 metrics(Collection) ->
     Mod = idx_module(),
@@ -239,7 +239,7 @@ metrics(Collection) ->
 %%--------------------------------------------------------------------
 -spec metrics(Collection::collection(), Prefix::metric(),
               Depth::pos_integer()) ->
-                    {ok, Metric::metric()} |
+                    {ok, [metric()]} |
                     {error, Error::term()}.
 metrics(Collection, Prefix, Depth) ->
     Mod = idx_module(),
@@ -335,7 +335,7 @@ values(Collection, Metric, Namespace, Tag) ->
 %%--------------------------------------------------------------------
 
 -spec expand(bucket(), [glob_metric()]) ->
-                    {ok, {bucket(), metric()}} |
+                    {ok, {bucket(), [metric()]}} |
                     {error, Error::term()}.
 expand(B, Gs) ->
     Mod = idx_module(),
