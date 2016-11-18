@@ -12,7 +12,7 @@
 %% API exports
 -export([init/0,
          lookup/1, lookup/2, lookup_tags/1,
-         collections/0, metrics/1, metrics/3, namespaces/1, namespaces/2,
+         collections/0, metrics/1, metrics/4, namespaces/1, namespaces/2,
          tags/2, tags/3, values/3, values/4, expand/2,
          add/4, add/5, update/5,
          delete/4, delete/5]).
@@ -69,6 +69,7 @@
     {error, Error::term()}.
 
 -callback metrics(Collection::collection(), Prefix::metric(),
+                  Tags::[{namespace(), tag_name(), tag_value()}],
                   Depth::pos_integer()) ->
     {ok, [metric()]} |
     {error, Error::term()}.
@@ -229,21 +230,23 @@ metrics(Collection) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Returns a list of metric path suffixes of `Depth' that are prefixed
-%% by the given probe `Prefix', which can also be empty.
+%% by the given probe `Prefix', which can also be empty. Metrics are
+%% further refined to match an optional list of `Tags'.
 %%
 %% For example:
-%% metrics(<<"collection">>, [], 1) -> [<<"base">>].
-%% metrics(<<"collection">>, [<<"base">>], 1) -> [<<"cpu">>].
-%% metrics(<<"collection">>, [], 2) -> [[<<"base">>,<<"cpu">>]].
+%% metrics(<<"collection">>, [], [], 1) -> [<<"base">>].
+%% metrics(<<"collection">>, [<<"base">>], ,[], 1) -> [<<"cpu">>].
+%% metrics(<<"collection">>, [], [], 2) -> [[<<"base">>,<<"cpu">>]].
 %% @end
 %%--------------------------------------------------------------------
 -spec metrics(Collection::collection(), Prefix::metric(),
+              Tags::[{namespace(), tag_name(), tag_value()}],
               Depth::pos_integer()) ->
                     {ok, [metric()]} |
                     {error, Error::term()}.
-metrics(Collection, Prefix, Depth) ->
+metrics(Collection, Prefix, Tags, Depth) ->
     Mod = idx_module(),
-    Mod:metrics(Collection, Prefix, Depth).
+    Mod:metrics(Collection, Prefix, Tags, Depth).
 
 %%--------------------------------------------------------------------
 %% @doc
