@@ -11,7 +11,7 @@
 
 %% API exports
 -export([init/0,
-         lookup/1, lookup/2, lookup_tags/1,
+         lookup/4, lookup/5, lookup_tags/1,
          collections/0, metrics/1, metrics/3, namespaces/1, namespaces/2,
          tags/2, tags/3, values/3, values/4, expand/2,
          add/4, add/5, update/5,
@@ -40,6 +40,21 @@
 
 -type group_by_field() :: binary().
 
+
+-type opts() :: [term()].
+
+-type start() :: non_neg_integer().
+
+-type finish() :: pos_integer().
+
+-type endpoint() ::
+        default |
+        null.
+
+
+-type lookup_result() ::
+        {bucket(), key(), [{start(), finish(), endpoint()}]}.
+
 -export_type([bucket/0, collection/0, metric/0, key/0,
               glob_metric/0, tag_name/0, tag_value/0,
               where/0, lqry/0, group_by_field/0]).
@@ -48,12 +63,12 @@
     ok |
     {error, Error::term()}.
 
--callback lookup(lqry()) ->
-    {ok, [{bucket(), key()}]} |
+-callback lookup(lqry(), start(), finish(), opts()) ->
+    {ok, [lookup_result()]} |
     {error, Error::term()}.
 
--callback lookup(lqry(), [group_by_field()]) ->
-    {ok, [{bucket(), key(), [tag_value()]}]} |
+-callback lookup(lqry(), start(), finish(), [group_by_field()], opts()) ->
+    {ok, [{lookup_result(), [tag_value()]}]} |
     {error, Error::term()}.
 
 -callback lookup_tags(lqry()) ->
@@ -163,12 +178,12 @@ init() ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec lookup(lqry()) ->
-                    {ok, [{bucket(), key()}]} |
+-spec lookup(lqry(), start(), finish(), opts()) ->
+                    {ok, [lookup_result()]} |
                     {error, Error::term()}.
-lookup(Query) ->
+lookup(Query, Start, Finish, Opts) ->
     Mod = idx_module(),
-    Mod:lookup(Query).
+    Mod:lookup(Query, Start, Finish, Opts).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -178,13 +193,12 @@ lookup(Query) ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec lookup(lqry(), [group_by_field()]) ->
-                    {ok, [{bucket(), key(), [group_by_field()]}]} |
+-spec lookup(lqry(), start(), finish(), [group_by_field()], opts()) ->
+                    {ok, [{lookup_result(), [group_by_field()]}]} |
                     {error, Error::term()}.
-lookup(Query, GroupBy) ->
+lookup(Query, Start, Finish, GroupBy, Opts) ->
     Mod = idx_module(),
-    Mod:lookup(Query, GroupBy).
-
+    Mod:lookup(Query, Start, Finish, GroupBy, Opts).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -198,7 +212,6 @@ lookup(Query, GroupBy) ->
 lookup_tags(Query) ->
     Mod = idx_module(),
     Mod:lookup_tags(Query).
-
 
 %%--------------------------------------------------------------------
 %% @doc
