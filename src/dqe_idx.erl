@@ -51,7 +51,6 @@
         default |
         null.
 
-
 -type lookup_result() ::
         {bucket(), key(), [{start(), finish(), endpoint()}]}.
 
