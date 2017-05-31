@@ -9,14 +9,17 @@
 %%%-------------------------------------------------------------------
 -module(dqe_idx).
 
+-behaviour(dqe_idx).
+
 %% API exports
 -export([init/0,
          lookup/4, lookup/5, lookup_tags/1,
          collections/0, metrics/1, metrics/3, namespaces/1, namespaces/2,
          tags/2, tags/3, values/3, values/4, expand/2,
-         add/4, add/5, update/5,
+         add/5, add/6, update/6, touch/1,
          delete/4, delete/5]).
 
+-type timestamp() :: pos_integer() | undefined.
 -type bucket() :: binary().
 -type collection() :: binary().
 -type metric() :: [binary()].
@@ -118,10 +121,19 @@
     {ok, {bucket(), [metric()]}} |
     {error, Error::term()}.
 
+-callback touch([{Collection::collection(),
+                  Metric::metric(),
+                  Time::timestamp()} |
+                 {Collection::collection(),
+                  Metric::metric()}]) ->
+    ok |
+    {error, Error::term()}.
+
 -callback add(Collection::collection(),
               Metric::metric(),
               Bucket::bucket(),
-              Key::key()) ->
+              Key::key(),
+              FirstSeen::timestamp()) ->
     {ok, MetricIdx::term()} | ok |
     {error, Error::term()}.
 
@@ -129,6 +141,7 @@
               Metric::metric(),
               Bucket::bucket(),
               Key::key(),
+              FirstSeen::timestamp(),
               Tags::[{namespace(), tag_name(), tag_value()}]) ->
     {ok, MetricIdx::term()} | ok |
     {error, Error::term()}.
@@ -137,6 +150,7 @@
                  Metric::metric(),
                  Bucket::bucket(),
                  Key::key(),
+                 FirstSeen::timestamp(),
                  Tags::[{namespace(), tag_name(), tag_value()}]) ->
     {ok, MetricIdx::term()} | ok |
     {error, Error::term()}.
@@ -317,7 +331,7 @@ tags(Collection, Metric, Namespace) ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec values(Collection::collection(), Metric::metric(),
+-spec values(Collection::collection(), Namespace::namespace(),
              Tag::tag_name()) ->
                     {ok, [tag_value()]} |
                     {error, Error::term()}.
@@ -355,34 +369,39 @@ expand(B, Gs) ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Sets the last seen value for a metric overwriting the current
+%% value.
+%% @end
+%%--------------------------------------------------------------------
+
+-spec touch([{Collection::collection(),
+              Metric::metric(),
+              Time::timestamp()} |
+             {Collection::collection(),
+              Metric::metric()}]) ->
+    ok |
+    {error, Error::term()}.
+
+touch(Data) ->
+    Mod = idx_module(),
+    Mod:touch(Data).
+
+%%--------------------------------------------------------------------
+%% @doc
 %% Links a collection/metric to a bucket and key. Returns whatever
 %% identifyer the colleciton/metric has if any. This MAY either return
 %% {ok, ID} or optinally ok, if ok is returned it MUST only be done
 %% if the metric was already present in the index store. Returning
 %% {ok, ID} is ALWAYS acceptable. A consumer of this API MAY assume
 %% that if ok is returned the related tags are already in the store
-%% as well.
-%% @end
-%%--------------------------------------------------------------------
-
--spec add(Collection::collection(),
-          Metric::metric(),
-          Bucket::bucket(),
-          Key::key()) ->
-                 {ok, MetricIdx::term()} |
-                 ok |
-                 {error, Error::term()}.
-
-add(Collection, Metric, Bucket, Key) ->
-    Mod = idx_module(),
-    Mod:add(Collection, Metric, Bucket, Key).
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Adds one or more metrics tag pairs to a metric. This
-%% function MUST not change existing tags, or add tags to an existing
-%% metric IF add/4 returned ok. It MAY add additional tags if add/4
-%% returned {ok, ID} despite the metric being present.
+%% as well.<br/>
+%% If the metric doesn't exist last seen should be set to
+%% infinity.<br/>
+%% A First Seen timestamp might be provided. If it is and
+%% a new metric is created the first seen value of this metric should
+%% be set to the value. If it is provided and the metricdoes already
+%% exist the last seen should be set to the maximum of the provided
+%% value and the current last seen.
 %% @end
 %%--------------------------------------------------------------------
 
@@ -390,14 +409,44 @@ add(Collection, Metric, Bucket, Key) ->
           Metric::metric(),
           Bucket::bucket(),
           Key::key(),
+          FistSeen::timestamp()) ->
+                 {ok, MetricIdx::term()} |
+                 ok |
+                 {error, Error::term()}.
+
+add(Collection, Metric, Bucket, Key, Timestamp) ->
+    Mod = idx_module(),
+    Mod:add(Collection, Metric, Bucket, Key, Timestamp).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Adds one or more metrics tag pairs to a metric. This
+%% function MUST not change existing tags, or add tags to an existing
+%% metric IF add/4 returned ok. It MAY add additional tags if add/4
+%% returned {ok, ID} despite the metric being present.<br/>
+%% If the metric doesn't exist last seen should be set to
+%% infinity.<br/>
+%% A First Seen timestamp might be provided. If it is and
+%% a new metric is created the first seen value of this metric should
+%% be set to the value. If it is provided and the metricdoes already
+%% exist the last seen should be set to the maximum of the provided
+%% value and the current last seen.
+%% @end
+%%--------------------------------------------------------------------
+
+-spec add(Collection::collection(),
+          Metric::metric(),
+          Bucket::bucket(),
+          Key::key(),
+          FistSeen::timestamp(),
           Tags::[{namespace(), tag_name(), tag_value()}]) ->
                  {ok, MetricIdx::term()} |
                  ok |
                  {error, Error::term()}.
 
-add(Collection, Metric, Bucket, Key, Tags) ->
+add(Collection, Metric, Bucket, Key, Timestamp, Tags) ->
     Mod = idx_module(),
-    Mod:add(Collection, Metric, Bucket, Key, Tags).
+    Mod:add(Collection, Metric, Bucket, Key, Timestamp, Tags).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -405,7 +454,14 @@ add(Collection, Metric, Bucket, Key, Tags) ->
 %% the metric was not yet known to the index store, if however it was
 %% known it MUST add new tags and MUST update existing tags. This is
 %% meant to be used with metadata tags as described in the metrics2.0
-%% specification.
+%% specification.<br/>
+%% If the metric doesn't exist last seen should be set to
+%% infinity.<br/>
+%% A First Seen timestamp might be provided. If it is and
+%% a new metric is created the first seen value of this metric should
+%% be set to the value. If it is provided and the metricdoes already
+%% exist the last seen should be set to the maximum of the provided
+%% value and the current last seen.
 %% @end
 %%--------------------------------------------------------------------
 
@@ -413,14 +469,15 @@ add(Collection, Metric, Bucket, Key, Tags) ->
              Metric::metric(),
              Bucket::bucket(),
              Key::key(),
+             FistSeen::timestamp(),
              Tags::[{namespace(), tag_name(), tag_value()}]) ->
                     {ok, MetricIdx::term()} |
                     ok |
                     {error, Error::term()}.
 
-update(Collection, Metric, Bucket, Key, Tags) ->
+update(Collection, Metric, Bucket, Key, FistSeen, Tags) ->
     Mod = idx_module(),
-    Mod:update(Collection, Metric, Bucket, Key, Tags).
+    Mod:update(Collection, Metric, Bucket, Key, FistSeen, Tags).
 
 %%--------------------------------------------------------------------
 %% @doc
