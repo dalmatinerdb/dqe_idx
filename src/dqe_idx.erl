@@ -50,6 +50,14 @@
 
 -type finish() :: pos_integer().
 
+-type touch_point() :: {Collection::collection(),
+                        Metric::metric(),
+                        Time::timestamp()} |
+                       {Collection::collection(),
+                        Metric::metric()}.
+
+-type touch_points() :: [touch_point()].
+
 -type endpoint() ::
         default |
         null.
@@ -59,7 +67,8 @@
 
 -export_type([bucket/0, collection/0, metric/0, key/0,
               glob_metric/0, tag_name/0, tag_value/0,
-              where/0, lqry/0, group_by_field/0]).
+              where/0, lqry/0, group_by_field/0, timestamp/0,
+              touch_points/0, touch_point/0]).
 
 -callback init() ->
     ok |
@@ -121,11 +130,7 @@
     {ok, {bucket(), [metric()]}} |
     {error, Error::term()}.
 
--callback touch([{Collection::collection(),
-                  Metric::metric(),
-                  Time::timestamp()} |
-                 {Collection::collection(),
-                  Metric::metric()}]) ->
+-callback touch(touch_points()) ->
     ok |
     {error, Error::term()}.
 
@@ -374,11 +379,7 @@ expand(B, Gs) ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec touch([{Collection::collection(),
-              Metric::metric(),
-              Time::timestamp()} |
-             {Collection::collection(),
-              Metric::metric()}]) ->
+-spec touch(touch_points()) ->
     ok |
     {error, Error::term()}.
 
