@@ -16,7 +16,7 @@
          lookup/4, lookup/5, lookup_tags/1,
          collections/0, metrics/1, metrics/3, namespaces/1, namespaces/2,
          tags/2, tags/3, values/3, values/4, expand/2,
-         add/5, add/6, update/6, touch/1,
+         add/5, add/6, update/5, touch/1,
          delete/4, delete/5]).
 
 -type timestamp() :: pos_integer() | undefined.
@@ -50,11 +50,11 @@
 
 -type finish() :: pos_integer().
 
--type touch_point() :: {Collection::collection(),
-                        Metric::metric(),
+-type touch_point() :: {Bucket::bucket(),
+                        Key::key(),
                         Time::timestamp()} |
-                       {Collection::collection(),
-                        Metric::metric()}.
+                       {Bucket::bucket(),
+                        Key::key()}.
 
 -type touch_points() :: [touch_point()].
 
@@ -155,7 +155,6 @@
                  Metric::metric(),
                  Bucket::bucket(),
                  Key::key(),
-                 FirstSeen::timestamp(),
                  Tags::[{namespace(), tag_name(), tag_value()}]) ->
     {ok, MetricIdx::term()} | ok |
     {error, Error::term()}.
@@ -470,15 +469,14 @@ add(Collection, Metric, Bucket, Key, Timestamp, Tags) ->
              Metric::metric(),
              Bucket::bucket(),
              Key::key(),
-             FistSeen::timestamp(),
              Tags::[{namespace(), tag_name(), tag_value()}]) ->
                     {ok, MetricIdx::term()} |
                     ok |
                     {error, Error::term()}.
 
-update(Collection, Metric, Bucket, Key, FistSeen, Tags) ->
+update(Collection, Metric, Bucket, Key, Tags) ->
     Mod = idx_module(),
-    Mod:update(Collection, Metric, Bucket, Key, FistSeen, Tags).
+    Mod:update(Collection, Metric, Bucket, Key, Tags).
 
 %%--------------------------------------------------------------------
 %% @doc
