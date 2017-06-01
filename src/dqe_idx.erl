@@ -19,7 +19,7 @@
          add/5, add/6, update/5, touch/1,
          delete/4, delete/5]).
 
--type timestamp() :: pos_integer() | undefined.
+-type timestamp() :: pos_integer() | undefined | now.
 -type bucket() :: binary().
 -type collection() :: binary().
 -type metric() :: [binary()].
