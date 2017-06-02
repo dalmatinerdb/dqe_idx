@@ -95,7 +95,7 @@
     {ok, [metric()]} |
     {error, Error::term()}.
 
--callback metrics(Collection::collection(), Tags::tags()) ->
+-callback metrics(Collection::collection(), Where::where()) ->
     {ok, [metric()]} |
     {error, Error::term()}.
 
@@ -268,12 +268,12 @@ metrics(Collection) ->
 %% @end
 %%--------------------------------------------------------------------
 
--spec metrics(Collection::collection(), Tags::tags()) ->
+-spec metrics(Collection::collection(), Where::where()) ->
                      {ok, [metric()]} |
                      {error, Error::term()}.
-metrics(Collection, Tags) ->
+metrics(Collection, Where) ->
     Mod = idx_module(),
-    Mod:metrics(Collection, Tags).
+    Mod:metrics(Collection, Where).
 
 %%--------------------------------------------------------------------
 %% @doc
