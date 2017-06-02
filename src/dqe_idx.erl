@@ -14,7 +14,8 @@
 %% API exports
 -export([init/0,
          lookup/4, lookup/5, lookup_tags/1,
-         collections/0, metrics/1, metrics/3, namespaces/1, namespaces/2,
+         collections/0, metrics/1, metrics/2, metrics/3,
+         namespaces/1, namespaces/2,
          tags/2, tags/3, values/3, values/4, expand/2,
          add/5, add/6, update/5, touch/1,
          delete/4, delete/5]).
@@ -91,6 +92,10 @@
     {error, Error::term()}.
 
 -callback metrics(Collection::collection()) ->
+    {ok, [metric()]} |
+    {error, Error::term()}.
+
+-callback metrics(Collection::collection(), Tags::tags()) ->
     {ok, [metric()]} |
     {error, Error::term()}.
 
@@ -255,6 +260,20 @@ collections() ->
 metrics(Collection) ->
     Mod = idx_module(),
     Mod:metrics(Collection).
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Lists all metrics in a collections that match a given tag set.
+%% @end
+%%--------------------------------------------------------------------
+
+-spec metrics(Collection::collection(), Tags::tags()) ->
+                     {ok, [metric()]} |
+                     {error, Error::term()}.
+metrics(Collection, Tags) ->
+    Mod = idx_module(),
+    Mod:metrics(Collection, Tags).
 
 %%--------------------------------------------------------------------
 %% @doc
