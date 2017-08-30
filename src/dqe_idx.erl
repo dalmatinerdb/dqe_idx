@@ -36,6 +36,7 @@
 -type opt_metric() :: metric() | undefined.
 
 -type where() :: {'=',  tag(), tag_value()} |
+                 {'exists', tag() } |
                  {'and', where(), where()} |
                  {'or', where(), where()}.
 
